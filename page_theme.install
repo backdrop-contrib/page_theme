@@ -1,0 +1,60 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the page_theme module.
+ */
+
+
+/**
+ * Implements hook_schema().
+ */
+function page_theme_schema() {
+
+  $schema = array();
+  $schema['page_theme'] = array(
+    'description' => 'Page theme settings.',
+    'fields' => array(
+      'ptid' => array(
+        'description' => 'Primary Key: Unique page theme ID.',
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'theme' => array(
+        'description' => 'Theme name.',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'pages' => array(
+        'description' => 'List of paths to which the theme is assigned.',
+        'type' => 'text',
+        'not null' => TRUE,
+      ),
+      'status' => array(
+        'description' => 'Theme enabled status. (1 = enabled, 0 = disabled)',
+        'type' => 'int',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'weight' => array(
+        'description' => 'Theme weight within pages.',
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('ptid'),
+    'unique keys' => array(
+      'theme' => array('theme'),
+    ),
+    'indexes' => array(
+      'list' => array('theme', 'weight'),
+    ),
+  );
+
+  return $schema;
+}
