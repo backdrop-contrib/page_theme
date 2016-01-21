@@ -1,6 +1,6 @@
 name = Page Theme
 description = Allows to use different themes than the site default on specific pages.
 backdrop = 1.x
-type = module
 package = Appearance
+type = module
 configure = admin/structure/page-theme

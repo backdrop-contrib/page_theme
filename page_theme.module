@@ -7,17 +7,6 @@
  */
 
 
-function page_theme_help($path, $arg) {
-
-  switch ($path) {
-
-    case 'admin/structure/page-theme':
-      $output = '<p>' . t('If pages are several defined, the first theme in the list will be used.') . '</p>';
-      $output .= '<p>' . t('Only themes, which are enabled in the <a href="@themes_section">themes section</a>, will be used otherwise the site default theme.', array('@themes_section' => url('admin/appearance'))) . '</p>';
-      return $output;
-  }
-}
-
 /**
  * Implements hook_permission().
  */
@@ -31,16 +20,6 @@ function page_theme_permission() {
   return $perm;
 }
 
-/*
-  $items['admin/structure/types/add'] = array(
-    'title' => 'Add content type',
-    'page callback' => 'backdrop_get_form',
-    'page arguments' => array('node_type_form'),
-    'access arguments' => array('administer content types'),
-    'type' => MENU_LOCAL_ACTION,
-    'file' => 'node.types.inc',
-  );
-*/
 
 /**
  * Implements hook_menu().
