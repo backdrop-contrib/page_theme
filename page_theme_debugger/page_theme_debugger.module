@@ -93,18 +93,3 @@ function page_theme_debugger_block_view($delta = '') {
 
   return $block;
 }
-
-
-/**
- * Implements hook_config_info().
- */
-function page_theme_debugger_config_info() {
-
-  $prefixes = array();
-  $prefixes['page_theme_debugger.settings'] = array(
-    'label' => t('Page Theme Debugger settings'),
-    'group' => t('Configuration'),
-  );
-
-  return $prefixes;
-}
