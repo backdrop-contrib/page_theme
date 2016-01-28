@@ -3,5 +3,6 @@ description = Displays a list of modules which override the system default theme
 backdrop = 1.x
 package = Appearance
 type = module
+dependencies[] = block
 dependencies[] = page_theme
 configure = admin/structure/layouts
