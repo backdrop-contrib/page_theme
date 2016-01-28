@@ -73,14 +73,15 @@ function page_theme_menu() {
 function page_theme_menu_access_add($perm) {
 
   $theme_options = page_theme_get_theme_options();
+
   return user_access($perm) && count($theme_options) > 1;
 }
 
 function page_theme_load($theme) {
 
-  $page_theme = db_query('SELECT theme, pages, status, weight FROM {page_theme} WHERE theme = :theme', array(':theme' => $theme))
-    ->fetchObject();
-  return $page_theme;
+  $page_themes = page_theme_page_themes_load();
+
+  return $page_themes[$theme];
 }
 
 
@@ -106,24 +107,41 @@ function page_theme_custom_theme() {
 
   $path = backdrop_get_path_alias($_GET['q']);
 
-  $result = db_query('SELECT theme, pages FROM {page_theme} WHERE status = 1 ORDER BY weight, theme');
-  foreach ($result as $page_theme) {
+  $page_themes = page_theme_page_themes_enabled();
+  foreach ($page_themes as $page_theme) {
 
-    $page_match = backdrop_match_path($path, $page_theme->pages);
+    $page_match = backdrop_match_path($path, $page_theme['pages']);
     if ($path != $_GET['q']) {
-      $page_match = $page_match || backdrop_match_path($_GET['q'], $page_theme->pages);
+      $page_match = $page_match || backdrop_match_path($_GET['q'], $page_theme['pages']);
     }
 
     if ($page_match) {
-      return $page_theme->theme;
+      return $page_theme['theme'];
     }
   }
 }
 
 
 /**
- *  Helper functions.
+ * Implements hook_config_info().
  */
+function page_theme_config_info() {
+
+  $prefixes = array();
+  $prefixes['page_theme'] = array(
+    'name_key' => 'theme',
+    'label_callback' => 'page_theme_page_themes_label',
+    'group' => t('Page Theme'),
+  );
+
+  return $prefixes;
+}
+
+
+/**
+ * Helper functions.
+ */
+
 function page_theme_get_theme_options() {
 
   static $options = array();
@@ -132,9 +150,9 @@ function page_theme_get_theme_options() {
 
     $themes = page_theme_get_themes();
 
-    $result = db_query('SELECT theme FROM {page_theme}');
-    foreach ($result as $page_theme) {
-      unset($themes[$page_theme->theme]);
+    $page_themes = page_theme_page_themes_load();
+    foreach ($page_themes as $theme => $page_theme) {
+      unset($themes[$theme]);
     }
 
     $options['0'] = '- '. t('Select theme') .' -';
@@ -182,4 +200,64 @@ function page_theme_get_theme_status($theme) {
     ->fetchObject();
 
   return $system->status;
+}
+
+function page_theme_page_themes_load() {
+
+  $weight = array();
+  $theme = array();
+  $page_themes = array();
+
+  $config_names = config_get_names_with_prefix('page_theme.');
+  foreach ($config_names as $config_name) {
+
+    $page_theme = config_get($config_name);
+
+    $weight[$page_theme['theme']] = $page_theme['weight'];
+    $theme[$page_theme['theme']] = $page_theme['theme'];
+    $page_themes[$page_theme['theme']] = $page_theme;
+  }
+
+  array_multisort($weight, SORT_ASC, $theme, SORT_ASC, SORT_STRING, $page_themes);
+
+  return $page_themes;
+}
+
+function page_theme_page_themes_save($page_theme) {
+
+  $config = config('page_theme.' . $page_theme['theme']);
+  $config->setData($page_theme);
+  $config->save();
+
+  backdrop_static_reset('page_theme_page_themes_enabled');
+}
+
+function page_theme_page_themes_delete($theme) {
+
+  config('page_theme.' . $theme)->delete();
+
+  backdrop_static_reset('page_theme_page_themes_enabled');
+}
+
+function page_theme_page_themes_enabled() {
+
+  $page_themes_enabled = &backdrop_static(__FUNCTION__);
+  if (isset($page_themes_enabled)) {
+    return $page_themes_enabled;
+  }
+
+  $page_themes_enabled = array();
+  $page_themes = page_theme_page_themes_load();
+  foreach ($page_themes as $theme) {
+    if (!!$theme['status']) {
+      $page_themes_enabled[$theme['theme']] = $theme;
+    }
+  }
+
+  return $page_themes_enabled;
+}
+
+function page_theme_page_themes_label($page_theme) {
+
+  return page_theme_get_theme_name($page_theme['theme']);
 }

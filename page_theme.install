@@ -7,54 +7,27 @@
 
 
 /**
- * Implements hook_schema().
+ * Implements hook_update_N().
+ *
+ * Move module settings from database to config.
  */
-function page_theme_schema() {
+function page_theme_update_1000() {
 
-  $schema = array();
-  $schema['page_theme'] = array(
-    'description' => 'Page theme settings.',
-    'fields' => array(
-      'ptid' => array(
-        'description' => 'Primary Key: Unique page theme ID.',
-        'type' => 'serial',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
-      'theme' => array(
-        'description' => 'Theme name.',
-        'type' => 'varchar',
-        'length' => 255,
-        'not null' => TRUE,
-        'default' => '',
-      ),
-      'pages' => array(
-        'description' => 'List of paths to which the theme is assigned.',
-        'type' => 'text',
-        'not null' => TRUE,
-      ),
-      'status' => array(
-        'description' => 'Theme enabled status. (1 = enabled, 0 = disabled)',
-        'type' => 'int',
-        'size' => 'tiny',
-        'not null' => TRUE,
-        'default' => 0,
-      ),
-      'weight' => array(
-        'description' => 'Theme weight within pages.',
-        'type' => 'int',
-        'not null' => TRUE,
-        'default' => 0,
-      ),
-    ),
-    'primary key' => array('ptid'),
-    'unique keys' => array(
-      'theme' => array('theme'),
-    ),
-    'indexes' => array(
-      'list' => array('theme', 'weight'),
-    ),
-  );
+  // Migrate database table to config.
+  $page_themes = db_query("SELECT * FROM {page_theme}")->fetchAllAssoc('ptid');
+  foreach ($page_themes as $page_theme) {
+    $page_theme = (array) $page_theme;
+    $data = array(
+      'theme' => $page_theme['theme'],
+      'pages' => $page_theme['pages'],
+      'weight' => $page_theme['weight'],
+      'status' => $page_theme['status'],
+      );
+    $config = config('page_theme.' . $page_theme['theme']);
+    $config->setData($data);
+    $config->save();
+  }
 
-  return $schema;
+  // Delete database table.
+  db_drop_table('page_theme');
 }

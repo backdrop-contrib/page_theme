@@ -13,35 +13,43 @@ function page_theme_admin_overview($form, &$form_state) {
 
   $themes = array();
 
-  $result = db_query('SELECT theme, pages, status, weight FROM {page_theme} ORDER BY weight, theme');
-  foreach ($result as $page_theme) {
+  $page_themes = page_theme_page_themes_load();
+  foreach ($page_themes as $page_theme) {
 
     $row['name'] = array(
-      '#markup' => page_theme_get_theme_name($page_theme->theme),
+      '#markup' => page_theme_get_theme_name($page_theme['theme']),
+    );
+    $row['theme'] = array(
+      '#type' => 'hidden',
+      '#value' => $page_theme['theme'],
+    );
+    $row['pages_display'] = array(
+      '#markup' => str_replace("\n", '<br>', check_plain($page_theme['pages'])),
     );
     $row['pages'] = array(
-      '#markup' => str_replace("\n", '<br />', check_plain($page_theme->pages)),
+      '#type' => 'hidden',
+      '#value' => $page_theme['pages'],
     );
     $row['status'] = array(
       '#type' => 'checkbox',
-      '#default_value' => $page_theme->status,
+      '#default_value' => $page_theme['status'],
     );
     $row['weight'] = array(
       '#type' => 'weight',
-      '#default_value' => $page_theme->weight,
+      '#default_value' => $page_theme['weight'],
       '#delta' => 50,
       '#attributes' => array(
         'class' => array('page-theme-order-weight'),
       ),
     );
     $row['configure'] = array(
-      '#markup' => l(t('configure'), 'admin/structure/page-theme/manage/'. $page_theme->theme .'/configure'),
+      '#markup' => l(t('configure'), 'admin/structure/page-theme/manage/'. $page_theme['theme'] .'/configure'),
     );
     $row['delete'] = array(
-      '#markup' => l(t('delete'), 'admin/structure/page-theme/manage/'. $page_theme->theme .'/delete'),
+      '#markup' => l(t('delete'), 'admin/structure/page-theme/manage/'. $page_theme['theme'] .'/delete'),
     );
 
-    $themes[$page_theme->theme] = $row;
+    $themes[$page_theme['theme']] = $row;
   }
 
   $form['themes'] = array(
@@ -74,7 +82,7 @@ function theme_page_theme_admin_overview($variables) {
 
     $row = array();
     $row[] = backdrop_render($form['themes'][$theme]['name']);
-    $row[] = backdrop_render($form['themes'][$theme]['pages']);
+    $row[] = backdrop_render($form['themes'][$theme]['pages_display']);
     $row[] = backdrop_render($form['themes'][$theme]['status']);
     $row[] = backdrop_render($form['themes'][$theme]['weight']);
     $row[] = backdrop_render($form['themes'][$theme]['configure']);
@@ -110,12 +118,11 @@ function page_theme_admin_overview_submit($form, &$form_state) {
   foreach ($form_state['values']['themes'] as $theme => $value) {
 
     $field = array();
+    $field['theme'] = $value['theme'];
+    $field['pages'] = $value['pages'];
     $field['status'] = $value['status'];
     $field['weight'] = $value['weight'];
-    db_update('page_theme')
-      ->fields($field)
-      ->condition('theme', $theme)
-      ->execute();
+    page_theme_page_themes_save($field);
   }
 
   backdrop_set_message(t('The configuration has been saved.'));
@@ -184,9 +191,7 @@ function page_theme_admin_add_submit($form, &$form_state) {
   $field['pages'] = trim($form_state['values']['pages']);
   $field['status'] = intval(is_string($form_state['values']['status']['enabled']));
   $field['weight'] = $form_state['values']['weight'];
-  db_insert('page_theme')
-    ->fields($field)
-    ->execute();
+  page_theme_page_themes_save($field);
 
   backdrop_set_message(t('The theme has been added.'));
   $form_state['redirect'] = 'admin/structure/page-theme';
@@ -200,24 +205,24 @@ function page_theme_admin_edit($form, &$form_state, $page_theme) {
 
   $form['theme'] = array(
     '#type' => 'value',
-    '#value' => $page_theme->theme,
+    '#value' => $page_theme['theme'],
   );
   $form['theme_name'] = array(
     '#type' => 'item',
     '#title' => t('Theme'),
-    '#markup' => page_theme_get_theme_name($page_theme->theme),
+    '#markup' => page_theme_get_theme_name($page_theme['theme']),
   );
   $form['pages'] = array(
     '#type' => 'textarea',
     '#title' => t('Pages'),
     '#description' => t("Enter one page per line as Backdrop paths. The '*' character is a wildcard. Example paths are %blog for the blog page and %blog-wildcard for every personal blog. %front is the front page.", array('%blog' => 'blog', '%blog-wildcard' => 'blog/*', '%front' => '<front>')),
-    '#default_value' => $page_theme->pages,
+    '#default_value' => $page_theme['pages'],
     '#required' => TRUE,
   );
   $form['status'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Status'),
-    '#default_value' => $page_theme->status ? array('enabled') : array(),
+    '#default_value' => $page_theme['status'] ? array('enabled') : array(),
     '#options' => array(
       'enabled' => t('Enabled'),
     ),
@@ -225,7 +230,7 @@ function page_theme_admin_edit($form, &$form_state, $page_theme) {
   $form['weight'] = array(
     '#type' => 'weight',
     '#title' => t('Weight'),
-    '#default_value' => $page_theme->weight,
+    '#default_value' => $page_theme['weight'],
     '#delta' => 50,
   );
   $form['actions'] = array(
@@ -245,13 +250,11 @@ function page_theme_admin_edit($form, &$form_state, $page_theme) {
 function page_theme_admin_edit_submit($form, &$form_state) {
 
   $field = array();
+  $field['theme'] = $form_state['values']['theme'];
   $field['pages'] = trim($form_state['values']['pages']);
   $field['status'] = intval(is_string($form_state['values']['status']['enabled']));
   $field['weight'] = $form_state['values']['weight'];
-  db_update('page_theme')
-    ->fields($field)
-    ->condition('theme', $form_state['values']['theme'])
-    ->execute();
+  page_theme_page_themes_save($field);
 
   backdrop_set_message(t('The theme has been updated.'));
   $form_state['redirect'] = 'admin/structure/page-theme';
@@ -265,9 +268,9 @@ function page_theme_admin_delete($form, &$form_state, $page_theme) {
 
   $form['theme'] = array(
     '#type' => 'value',
-    '#value' => $page_theme->theme,
+    '#value' => $page_theme['theme'],
   );
-  $question = t('Are you sure you want to delete the theme %theme?', array('%theme' => page_theme_get_themes($page_theme->theme)));
+  $question = t('Are you sure you want to delete the theme %theme?', array('%theme' => page_theme_get_themes($page_theme['theme'])));
   $path = isset($_GET['destination']) ? $_GET['destination'] : 'admin/structure/page-theme';
 
   return confirm_form($form, $question, $path);
@@ -278,9 +281,7 @@ function page_theme_admin_delete_submit($form, &$form_state) {
   if ($form_state['values']['confirm']) {
 
     $theme = $form_state['values']['theme'];
-    db_delete('page_theme')
-      ->condition('theme', $theme)
-      ->execute();
+    page_theme_page_themes_delete($theme);
 
     backdrop_set_message(t('The theme has been deleted.'));
     $form_state['redirect'] = 'admin/structure/page-theme';
