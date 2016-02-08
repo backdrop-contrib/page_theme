@@ -1,8 +1,7 @@
 name = Page Theme Debugger
 description = Displays a list of modules which override the system default theme sorted by module's call-up.
 backdrop = 1.x
-package = Appearance
+package = Development
 type = module
 dependencies[] = block
-dependencies[] = page_theme
 configure = admin/structure/layouts

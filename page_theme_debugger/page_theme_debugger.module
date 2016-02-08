@@ -12,31 +12,34 @@
  */
 function page_theme_debugger_block_info() {
 
-  $info = array();
-  $info['page_theme_debugger'] = array(
+  $blocks['page_theme_debugger'] = array(
     'info' => t('Page Theme Debugger'),
-    'description' => t('List of modules which override the system default theme.'),
+    'description' => t('Displays a ist of modules which override the system default theme.'),
     'cache' => BACKDROP_NO_CACHE,
   );
 
-  return $info;
+  return $blocks;
 }
 
 
 /**
  * Implements hook_block_configure().
  */
-function page_theme_debugger_block_configure($delta = '') {
+function page_theme_debugger_block_configure($delta = '', $settings = array()) {
 
   $form = array();
 
   if ($delta == 'page_theme_debugger') {
 
-    $form['page_theme_debugger_blacklist'] = array(
+    $settings += array(
+      'blacklist' => config_get('page_theme_debugger.settings', 'blacklist'),
+    );
+
+    $form['blacklist'] = array(
       '#type' => 'textarea',
       '#title' => t('Blacklist'),
-      '#description' => t('Enter one module per line of each modules that should not execute <em>hook_custom_theme()</em>. Example modules are <em>og</em> for the Organic Groups module and <em>views</em> for the Views module.'),
-      '#default_value' => config_get('page_theme_debugger.settings', 'blacklist'),
+      '#description' => t('Enter one module per line of each modules that should not execute <em>hook_custom_theme()</em>. Example entry is <em>views</em> for the Views module.'),
+      '#default_value' => $settings['blacklist'],
     );
   }
 
@@ -47,11 +50,15 @@ function page_theme_debugger_block_configure($delta = '') {
 /**
  * Implements hook_block_save().
  */
-function page_theme_debugger_block_save($delta = '', $edit = array()) {
+function page_theme_debugger_block_save($delta = '', &$edit = array()) {
 
   if ($delta == 'page_theme_debugger') {
 
-    config_set('page_theme_debugger.settings', 'blacklist', $edit['page_theme_debugger_blacklist']);
+    $config = config('page_theme_debugger.settings');
+    $config->set('blacklist', $edit['blacklist']);
+    $config->save();
+
+    unset($edit['blacklist']);
   }
 }
 
@@ -59,30 +66,36 @@ function page_theme_debugger_block_save($delta = '', $edit = array()) {
 /**
  * Implements hook_block_view().
  */
-function page_theme_debugger_block_view($delta = '') {
+function page_theme_debugger_block_view($delta = '', $settings = array(), $contexts = array()) {
 
   $block = array();
 
   if ($delta == 'page_theme_debugger') {
 
-    $page_theme_debugger_blacklist = config_get('page_theme_debugger.settings', 'blacklist');
-    $blacklist = preg_split("/\r\n|\n|\r|\s/", $page_theme_debugger_blacklist, -1, PREG_SPLIT_NO_EMPTY);
+    $settings += array(
+      'blacklist' => config_get('page_theme_debugger.settings', 'blacklist'),
+    );
+    $blacklist = preg_split("/\r\n|\n|\r|\s/", $settings['blacklist'], -1, PREG_SPLIT_NO_EMPTY);
 
-    $items = array();
-    $items[] = t('Default theme: %theme', array('%theme' => page_theme_get_themes(config_get('system.core', 'theme_default'))));
+    foreach (system_rebuild_module_data() as $module) {
+      $modules[$module->name] = $module->info['name'];
+    }
+
+    foreach (system_rebuild_theme_data() as $theme) {
+      $themes[$theme->name] = $theme->info['name'];
+    }
+    $themes['0'] = $themes[config_get('system.core', 'theme_default')];
+
+    $items[] = t('Default theme: %theme', array('%theme' => $themes['0']));
 
     foreach (module_implements('custom_theme') as $module) {
 
       if (!in_array($module, $blacklist)) {
 
         $custom_theme = module_invoke($module, 'custom_theme');
-        if (is_array($custom_theme)) {
-          // Workaround for the Role Theme Switcher module,
-          // which returns an array instead of a string.
-          $custom_theme = array_pop($custom_theme);
-        }
         if (!is_null($custom_theme)) {
-          $items[] = t('Theme %theme is set by %module', array('%theme' => page_theme_get_themes($custom_theme), '%module' => $module .'_custom_theme()'));
+
+          $items[] = t('Theme %theme is set by %module module.', array('%theme' => $themes[$custom_theme], '%module' => $modules[$module]));
         }
       }
     }
@@ -100,7 +113,6 @@ function page_theme_debugger_block_view($delta = '') {
  */
 function page_theme_debugger_config_info() {
 
-  $prefixes = array();
   $prefixes['page_theme_debugger.settings'] = array(
     'label' => t('Page Theme Debugger settings'),
     'group' => t('Configuration'),

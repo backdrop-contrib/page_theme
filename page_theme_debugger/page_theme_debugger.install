@@ -28,7 +28,7 @@ function page_theme_debugger_update_1000() {
 
   // Migrate variables to config.
   $config = config('page_theme_debugger.settings');
-  $config->set('blacklist', update_variable_get('page_theme_debugger_blacklist', "ctools\nog\nviews"));
+  $config->set('blacklist', update_variable_get('page_theme_debugger_blacklist', "views"));
   $config->save();
 
   // Delete variables.

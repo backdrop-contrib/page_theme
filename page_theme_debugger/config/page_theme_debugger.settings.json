@@ -1,4 +1,4 @@
 {
   "_config_name": "page_theme_debugger.settings",
-  "blacklist": "ctools\nog\nviews"
+  "blacklist": "views"
 }
