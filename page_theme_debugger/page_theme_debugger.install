@@ -21,7 +21,9 @@ function page_theme_debugger_install() {
 
 /**
  * Implements hook_update_N().
- *
+ */
+
+/**
  * Move module settings from variables to config.
  */
 function page_theme_debugger_update_1000() {

@@ -2,8 +2,7 @@
 
 /**
  * @file
- * This module allows to use different themes than the site default on specific
- * pages.
+ * Allows to use different themes than the site default on specific pages.
  */
 
 
@@ -12,12 +11,11 @@
  */
 function page_theme_permission() {
 
-  $perm = array();
-  $perm['administer page theme'] = array(
+  $perms['administer page theme'] = array(
     'title' => t('Administer page theme settings'),
   );
 
-  return $perm;
+  return $perms;
 }
 
 
@@ -26,8 +24,7 @@ function page_theme_permission() {
  */
 function page_theme_menu() {
 
-  $menu = array();
-  $menu['admin/structure/page-theme'] = array(
+  $items['admin/structure/page-theme'] = array(
     'title' => 'Page theme',
     'description' => 'Configure which theme is used on which pages.',
     'page callback' => 'backdrop_get_form',
@@ -35,7 +32,7 @@ function page_theme_menu() {
     'access arguments' => array('administer page theme'),
     'file' => 'page_theme.admin.inc',
   );
-  $menu['admin/structure/page-theme/add'] = array(
+  $items['admin/structure/page-theme/add'] = array(
     'title' => 'Add theme',
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('page_theme_admin_add'),
@@ -45,19 +42,19 @@ function page_theme_menu() {
     'weight' => 1,
     'file' => 'page_theme.admin.inc',
   );
-  $menu['admin/structure/page-theme/manage/%page_theme'] = array(
+  $items['admin/structure/page-theme/manage/%page_theme'] = array(
     'title' => 'Configure theme',
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('page_theme_admin_edit', 4),
     'access arguments' => array('administer page theme'),
     'file' => 'page_theme.admin.inc',
   );
-  $menu['admin/structure/page-theme/manage/%page_theme/configure'] = array(
+  $items['admin/structure/page-theme/manage/%page_theme/configure'] = array(
     'title' => 'Configure theme',
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'context' => MENU_CONTEXT_INLINE,
   );
-  $menu['admin/structure/page-theme/manage/%page_theme/delete'] = array(
+  $items['admin/structure/page-theme/manage/%page_theme/delete'] = array(
     'title' => 'Delete theme',
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('page_theme_admin_delete', 4),
@@ -67,7 +64,7 @@ function page_theme_menu() {
     'file' => 'page_theme.admin.inc',
   );
 
-  return $menu;
+  return $items;
 }
 
 function page_theme_menu_access_add($perm) {
@@ -79,7 +76,7 @@ function page_theme_menu_access_add($perm) {
 
 function page_theme_load($theme) {
 
-  $page_themes = page_theme_page_themes_load();
+  $page_themes = page_theme_get_page_themes_all();
 
   return $page_themes[$theme];
 }
@@ -90,13 +87,12 @@ function page_theme_load($theme) {
  */
 function page_theme_theme() {
 
-  $theme = array();
-  $theme['page_theme_admin_overview'] = array(
+  $themes['page_theme_admin_overview'] = array(
     'render element' => 'form',
     'file' => 'page_theme.admin.inc',
   );
 
-  return $theme;
+  return $themes;
 }
 
 
@@ -107,7 +103,7 @@ function page_theme_custom_theme() {
 
   $path = backdrop_get_path_alias($_GET['q']);
 
-  $page_themes = page_theme_page_themes_enabled();
+  $page_themes = page_theme_get_page_themes_enabled();
   foreach ($page_themes as $page_theme) {
 
     $page_match = backdrop_match_path($path, $page_theme['pages']);
@@ -127,10 +123,9 @@ function page_theme_custom_theme() {
  */
 function page_theme_config_info() {
 
-  $prefixes = array();
-  $prefixes['page_theme'] = array(
+  $prefixes['page_theme.'] = array(
     'name_key' => 'theme',
-    'label_callback' => 'page_theme_page_themes_label',
+    'label_callback' => 'page_theme_get_page_themes_name',
     'group' => t('Page Theme'),
   );
 
@@ -141,28 +136,6 @@ function page_theme_config_info() {
 /**
  * Helper functions.
  */
-
-function page_theme_get_theme_options() {
-
-  static $options = array();
-
-  if (!$options) {
-
-    $themes = page_theme_get_themes();
-
-    $page_themes = page_theme_page_themes_load();
-    foreach ($page_themes as $theme => $page_theme) {
-      unset($themes[$theme]);
-    }
-
-    $options['0'] = '- '. t('Select theme') .' -';
-    foreach ($themes as $theme => $theme_name) {
-      $options[$theme] = page_theme_get_theme_status($theme) ? $theme_name : t('!theme (disabled)', array('!theme' => $theme_name));
-    }
-  }
-
-  return $options;
-}
 
 function page_theme_get_themes($theme = NULL) {
 
@@ -187,6 +160,28 @@ function page_theme_get_themes($theme = NULL) {
   return !is_null($theme) ? (isset($themes[$theme]) ? $themes[$theme] : $theme) : $themes;
 }
 
+function page_theme_get_theme_options() {
+
+  static $options = array();
+
+  if (!$options) {
+
+    $themes = page_theme_get_themes();
+
+    $page_themes = page_theme_get_page_themes_all();
+    foreach ($page_themes as $theme => $page_theme) {
+      unset($themes[$theme]);
+    }
+
+    $options['0'] = '- '. t('Select theme') .' -';
+    foreach ($themes as $theme => $theme_name) {
+      $options[$theme] = page_theme_get_theme_status($theme) ? $theme_name : t('!theme (disabled)', array('!theme' => $theme_name));
+    }
+  }
+
+  return $options;
+}
+
 function page_theme_get_theme_name($theme) {
 
   $themes = page_theme_get_themes();
@@ -202,7 +197,8 @@ function page_theme_get_theme_status($theme) {
   return $system->status;
 }
 
-function page_theme_page_themes_load() {
+
+function page_theme_get_page_themes_all() {
 
   $weight = array();
   $theme = array();
@@ -223,23 +219,7 @@ function page_theme_page_themes_load() {
   return $page_themes;
 }
 
-function page_theme_page_themes_save($page_theme) {
-
-  $config = config('page_theme.' . $page_theme['theme']);
-  $config->setData($page_theme);
-  $config->save();
-
-  backdrop_static_reset('page_theme_page_themes_enabled');
-}
-
-function page_theme_page_themes_delete($theme) {
-
-  config('page_theme.' . $theme)->delete();
-
-  backdrop_static_reset('page_theme_page_themes_enabled');
-}
-
-function page_theme_page_themes_enabled() {
+function page_theme_get_page_themes_enabled() {
 
   $page_themes_enabled = &backdrop_static(__FUNCTION__);
   if (isset($page_themes_enabled)) {
@@ -247,7 +227,7 @@ function page_theme_page_themes_enabled() {
   }
 
   $page_themes_enabled = array();
-  $page_themes = page_theme_page_themes_load();
+  $page_themes = page_theme_get_page_themes_all();
   foreach ($page_themes as $theme) {
     if (!!$theme['status']) {
       $page_themes_enabled[$theme['theme']] = $theme;
@@ -257,7 +237,7 @@ function page_theme_page_themes_enabled() {
   return $page_themes_enabled;
 }
 
-function page_theme_page_themes_label($page_theme) {
+function page_theme_get_page_themes_name($page_theme) {
 
   return page_theme_get_theme_name($page_theme['theme']);
 }

@@ -8,7 +8,9 @@
 
 /**
  * Implements hook_update_N().
- *
+ */
+
+/**
  * Move module settings from database to config.
  */
 function page_theme_update_1000() {
@@ -16,6 +18,7 @@ function page_theme_update_1000() {
   // Migrate database table to config.
   $page_themes = db_query("SELECT * FROM {page_theme}")->fetchAllAssoc('ptid');
   foreach ($page_themes as $page_theme) {
+
     $page_theme = (array) $page_theme;
     $data = array(
       'theme' => $page_theme['theme'],
@@ -23,6 +26,7 @@ function page_theme_update_1000() {
       'weight' => $page_theme['weight'],
       'status' => $page_theme['status'],
       );
+
     $config = config('page_theme.' . $page_theme['theme']);
     $config->setData($data);
     $config->save();
