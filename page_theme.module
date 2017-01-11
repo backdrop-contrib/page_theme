@@ -146,7 +146,7 @@ function page_theme_get_themes($theme = NULL) {
     foreach (system_rebuild_theme_data() as $theme_data) {
 
       $visibility = empty($theme_data->info['hidden']);
-      $compatible_core = isset($theme_data->info['backdrop']) && $theme_data->info['backdrop'] == BACKDROP_CORE_COMPATIBILITY && isset($theme_data->info['regions']['content']);
+      $compatible_core = isset($theme_data->info['backdrop']) && $theme_data->info['backdrop'] == BACKDROP_CORE_COMPATIBILITY;
       $compatible_php = version_compare(phpversion(), $theme_data->info['php'], '>=');
 
       if ($visibility && $compatible_core && $compatible_php) {
