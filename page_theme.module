@@ -101,14 +101,15 @@ function page_theme_theme() {
  */
 function page_theme_custom_theme() {
 
-  $path = backdrop_get_path_alias($_GET['q']);
+  $path = backdrop_strtolower(backdrop_get_path_alias($_GET['q']));
 
   $page_themes = page_theme_get_page_themes_enabled();
   foreach ($page_themes as $page_theme) {
+    $pages = backdrop_strtolower($page_theme['pages']);
 
-    $page_match = backdrop_match_path($path, $page_theme['pages']);
+    $page_match = backdrop_match_path($path, $pages);
     if ($path != $_GET['q']) {
-      $page_match = $page_match || backdrop_match_path($_GET['q'], $page_theme['pages']);
+      $page_match = $page_match || backdrop_match_path($_GET['q'], $pages);
     }
 
     if ($page_match) {
