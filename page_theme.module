@@ -144,13 +144,11 @@ function page_theme_get_themes($theme = NULL) {
 
   if (!$themes) {
 
-    foreach (system_rebuild_theme_data() as $theme_data) {
+    $result = db_query('SELECT name, info FROM {system} WHERE type = :type', array(':type' => 'theme'));
+    foreach ($result as $theme_data) {
+      $theme_data->info = unserialize($theme_data->info);
 
-      $visibility = empty($theme_data->info['hidden']);
-      $compatible_core = isset($theme_data->info['backdrop']) && $theme_data->info['backdrop'] == BACKDROP_CORE_COMPATIBILITY;
-      $compatible_php = version_compare(phpversion(), $theme_data->info['php'], '>=');
-
-      if ($visibility && $compatible_core && $compatible_php) {
+      if (empty($theme_data->info['hidden']) || !$theme_data->info['hidden']) {
         $themes[$theme_data->name] = $theme_data->info['name'];
       }
     }
