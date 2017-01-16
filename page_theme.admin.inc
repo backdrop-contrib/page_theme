@@ -44,10 +44,10 @@ function page_theme_admin_overview($form, &$form_state) {
       ),
     );
     $row['configure'] = array(
-      '#markup' => l(t('configure'), 'admin/structure/page-theme/manage/'. $page_theme['theme'] .'/configure'),
+      '#markup' => l(t('configure'), 'admin/appearance/page-theme/manage/'. $page_theme['theme'] .'/configure'),
     );
     $row['delete'] = array(
-      '#markup' => l(t('delete'), 'admin/structure/page-theme/manage/'. $page_theme['theme'] .'/delete'),
+      '#markup' => l(t('delete'), 'admin/appearance/page-theme/manage/'. $page_theme['theme'] .'/delete'),
     );
 
     $themes[$page_theme['theme']] = $row;
@@ -201,7 +201,7 @@ function page_theme_admin_add_submit($form, &$form_state) {
   backdrop_static_reset('page_theme_get_page_themes_enabled');
 
   backdrop_set_message(t('The theme has been added.'));
-  $form_state['redirect'] = 'admin/structure/page-theme';
+  $form_state['redirect'] = 'admin/appearance/page-theme';
 }
 
 
@@ -266,7 +266,7 @@ function page_theme_admin_edit_submit($form, &$form_state) {
   backdrop_static_reset('page_theme_get_page_themes_enabled');
 
   backdrop_set_message(t('The theme has been updated.'));
-  $form_state['redirect'] = 'admin/structure/page-theme';
+  $form_state['redirect'] = 'admin/appearance/page-theme';
 }
 
 
@@ -280,7 +280,7 @@ function page_theme_admin_delete($form, &$form_state, $page_theme) {
     '#value' => $page_theme['theme'],
   );
   $question = t('Are you sure you want to delete the theme %theme?', array('%theme' => page_theme_get_themes($page_theme['theme'])));
-  $path = isset($_GET['destination']) ? $_GET['destination'] : 'admin/structure/page-theme';
+  $path = isset($_GET['destination']) ? $_GET['destination'] : 'admin/appearance/page-theme';
 
   return confirm_form($form, $question, $path);
 }
@@ -297,7 +297,7 @@ function page_theme_admin_delete_submit($form, &$form_state) {
     backdrop_static_reset('page_theme_get_page_themes_enabled');
 
     backdrop_set_message(t('The theme has been deleted.'));
-    $form_state['redirect'] = 'admin/structure/page-theme';
+    $form_state['redirect'] = 'admin/appearance/page-theme';
     return;
   }
 }
