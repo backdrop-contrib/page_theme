@@ -7,19 +7,6 @@
 
 
 /**
- * Implements hook_permission().
- */
-function page_theme_permission() {
-
-  $perms['administer page theme'] = array(
-    'title' => t('Administer page theme settings'),
-  );
-
-  return $perms;
-}
-
-
-/**
  * Implements hook_menu().
  */
 function page_theme_menu() {
@@ -29,7 +16,7 @@ function page_theme_menu() {
     'description' => 'Configure which theme is used on which pages.',
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('page_theme_admin_overview'),
-    'access arguments' => array('administer page theme'),
+    'access arguments' => array('administer themes'),
     'type' => MENU_LOCAL_TASK,
     'weight' => 50,
     'file' => 'page_theme.admin.inc',
@@ -39,7 +26,7 @@ function page_theme_menu() {
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('page_theme_admin_add'),
     'access callback' => 'page_theme_menu_access_add',
-    'access arguments' => array('administer page theme'),
+    'access arguments' => array('administer themes'),
     'type' => MENU_LOCAL_ACTION,
     'file' => 'page_theme.admin.inc',
   );
@@ -47,7 +34,7 @@ function page_theme_menu() {
     'title' => 'Configure theme',
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('page_theme_admin_edit', 4),
-    'access arguments' => array('administer page theme'),
+    'access arguments' => array('administer themes'),
     'file' => 'page_theme.admin.inc',
   );
   $items['admin/appearance/page-theme/manage/%page_theme/configure'] = array(
@@ -59,7 +46,7 @@ function page_theme_menu() {
     'title' => 'Delete theme',
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('page_theme_admin_delete', 4),
-    'access arguments' => array('administer page theme'),
+    'access arguments' => array('administer themes'),
     'type' => MENU_LOCAL_TASK,
     'context' => MENU_CONTEXT_NONE,
     'file' => 'page_theme.admin.inc',
