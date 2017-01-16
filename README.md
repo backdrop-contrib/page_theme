@@ -16,9 +16,9 @@ Installation
 Troubleshooting
 ---------------
 
-If another theme is displayed as expected, enable the Page Theme Debugger block
-from the Page Theme Debugger module. The block displays a list of modules which
-override the system default theme sorted by module's call-up.
+If another theme is displayed as expected, enable the Custom Theme Analyzer
+block from the Custom Theme Analyzer module. The block displays a list of
+modules which override the system default theme sorted by module's call-up.
 
 License
 -------
