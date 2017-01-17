@@ -81,6 +81,7 @@ function page_theme_theme() {
  * Implements hook_custom_theme().
  */
 function page_theme_custom_theme() {
+  global $user;
 
   $path = backdrop_strtolower(backdrop_get_path_alias($_GET['q']));
 
@@ -94,7 +95,11 @@ function page_theme_custom_theme() {
     }
 
     if ($page_match) {
-      return $rule['theme'];
+
+      if (empty($rule['roles']) || !empty(array_intersect($user->roles, $rule['roles']))) {
+
+        return $rule['theme'];
+      }
     }
   }
 }

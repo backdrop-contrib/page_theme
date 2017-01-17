@@ -40,6 +40,13 @@ function page_theme_admin_overview($form, &$form_state) {
     $row['pages_display'] = array(
       '#markup' => nl2br(check_plain($rule['pages'])),
     );
+    $row['roles'] = array(
+      '#type' => 'value',
+      '#value' => $rule['roles'],
+    );
+    $row['roles_display'] = array(
+      '#markup' => theme('item_list', array('items' => array_intersect_key(array_map('check_plain', user_roles()), array_flip($rule['roles'])))),
+    );
     $row['status'] = array(
       '#type' => 'checkbox',
       '#default_value' => $rule['status'],
@@ -86,6 +93,7 @@ function theme_page_theme_admin_overview($variables) {
     $row[] = backdrop_render($form['rules'][$rule]['name_display']);
     $row[] = backdrop_render($form['rules'][$rule]['theme_display']);
     $row[] = backdrop_render($form['rules'][$rule]['pages_display']);
+    $row[] = backdrop_render($form['rules'][$rule]['roles_display']);
     $row[] = backdrop_render($form['rules'][$rule]['status']);
     $row[] = backdrop_render($form['rules'][$rule]['weight']);
     $row[] = backdrop_render($form['rules'][$rule]['configure']);
@@ -98,6 +106,7 @@ function theme_page_theme_admin_overview($variables) {
   $header[] = t('Name');
   $header[] = t('Theme');
   $header[] = t('Pages');
+  $header[] = t('Roles');
   $header[] = t('Enabled');
   $header[] = t('Weight');
   $header[] = array('data' => t('Operations'), 'colspan' => '2');
@@ -127,6 +136,7 @@ function page_theme_admin_overview_submit($form, &$form_state) {
         'name' => $rule['name'],
         'theme' => $rule['theme'],
         'pages' => $rule['pages'],
+        'roles' => $rule['roles'],
         'status' => $rule['status'],
         'weight' => $rule['weight'],
       ))
@@ -178,6 +188,13 @@ function page_theme_admin_add($form, &$form_state) {
     '#default_value' => '',
     '#required' => TRUE,
   );
+  $form['roles'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Roles'),
+    '#description' => t('Show this theme only for the selected role(s). If you select no roles, the block will be visible to all users.'),
+    '#default_value' => array(),
+    '#options' => array_map('check_plain', user_roles()),
+  );
   $form['status'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Status'),
@@ -217,6 +234,7 @@ function page_theme_admin_add_submit($form, &$form_state) {
       'name' => $form_state['values']['name'],
       'theme' => $form_state['values']['theme'],
       'pages' => $form_state['values']['pages'],
+      'roles' => array_keys(array_filter($form_state['values']['roles'])),
       'status' => intval(is_string($form_state['values']['status']['enabled'])),
       'weight' => $form_state['values']['weight'],
     ))
@@ -270,6 +288,13 @@ function page_theme_admin_edit($form, &$form_state, $rule) {
     '#default_value' => $rule['pages'],
     '#required' => TRUE,
   );
+  $form['roles'] = array(
+    '#type' => 'checkboxes',
+    '#title' => t('Roles'),
+    '#description' => t('Show this theme only for the selected role(s). If you select no roles, the block will be visible to all users.'),
+    '#default_value' => $rule['roles'],
+    '#options' => array_map('check_plain', user_roles()),
+  );
   $form['status'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Status'),
@@ -312,6 +337,7 @@ function page_theme_admin_edit_submit($form, &$form_state) {
       'name' => $form_state['values']['name'],
       'theme' => $form_state['values']['theme'],
       'pages' => $form_state['values']['pages'],
+      'roles' => array_keys(array_filter($form_state['values']['roles'])),
       'status' => intval(is_string($form_state['values']['status']['enabled'])),
       'weight' => $form_state['values']['weight'],
     ))

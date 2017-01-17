@@ -48,6 +48,7 @@ function page_theme_update_1200() {
     $data = config_get($name);
     $data['rule'] = $data['theme'];
     $data['name'] = isset($themes[$data['theme']]['name']) ? $themes[$data['theme']]['name'] : $data['theme'];
+    $data['roles'] = array();
 
     config('page_theme.rule.' . $data['rule'])
       ->setData($data)
