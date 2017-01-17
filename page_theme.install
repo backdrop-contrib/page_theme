@@ -7,6 +7,18 @@
 
 
 /**
+ * Implements hook_install().
+ */
+function page_theme_install() {
+
+  db_update('system')
+    ->fields(array('weight' => 50))
+    ->condition('name', 'page_theme')
+    ->execute();
+}
+
+
+/**
  * Implements hook_update_N().
  */
 
@@ -57,4 +69,15 @@ function page_theme_update_1200() {
     config($name)
       ->delete();
   }
+}
+
+/**
+ * Set module's weight to 50.
+ */
+function page_theme_update_1201() {
+
+  db_update('system')
+    ->fields(array('weight' => 50))
+    ->condition('name', 'page_theme')
+    ->execute();
 }
