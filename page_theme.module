@@ -22,28 +22,27 @@ function page_theme_menu() {
     'file' => 'page_theme.admin.inc',
   );
   $items['admin/appearance/page-theme/add'] = array(
-    'title' => 'Add theme',
+    'title' => 'Add rule',
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('page_theme_admin_add'),
-    'access callback' => 'page_theme_menu_access_add',
     'access arguments' => array('administer themes'),
     'type' => MENU_LOCAL_ACTION,
     'file' => 'page_theme.admin.inc',
   );
-  $items['admin/appearance/page-theme/manage/%page_theme'] = array(
-    'title' => 'Configure theme',
+  $items['admin/appearance/page-theme/manage/%page_theme_rule'] = array(
+    'title' => 'Configure rule',
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('page_theme_admin_edit', 4),
     'access arguments' => array('administer themes'),
     'file' => 'page_theme.admin.inc',
   );
-  $items['admin/appearance/page-theme/manage/%page_theme/configure'] = array(
-    'title' => 'Configure theme',
+  $items['admin/appearance/page-theme/manage/%page_theme_rule/configure'] = array(
+    'title' => 'Configure rule',
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'context' => MENU_CONTEXT_INLINE,
   );
-  $items['admin/appearance/page-theme/manage/%page_theme/delete'] = array(
-    'title' => 'Delete theme',
+  $items['admin/appearance/page-theme/manage/%page_theme_rule/delete'] = array(
+    'title' => 'Delete rule',
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('page_theme_admin_delete', 4),
     'access arguments' => array('administer themes'),
@@ -55,18 +54,12 @@ function page_theme_menu() {
   return $items;
 }
 
-function page_theme_menu_access_add($perm) {
+function page_theme_rule_load($rule) {
 
-  $theme_options = page_theme_get_theme_options();
+  $rule = strtr($rule, array('-' => '_'));
+  $rules = page_theme_get_rules();
 
-  return user_access($perm) && count($theme_options) > 1;
-}
-
-function page_theme_load($theme) {
-
-  $page_themes = page_theme_get_page_themes_all();
-
-  return $page_themes[$theme];
+  return isset($rules[$rule]) ? $rules[$rule] : FALSE;
 }
 
 
@@ -91,9 +84,9 @@ function page_theme_custom_theme() {
 
   $path = backdrop_strtolower(backdrop_get_path_alias($_GET['q']));
 
-  $page_themes = page_theme_get_page_themes_enabled();
-  foreach ($page_themes as $page_theme) {
-    $pages = backdrop_strtolower($page_theme['pages']);
+  $rules = page_theme_get_rules_enabled();
+  foreach ($rules as $rule) {
+    $pages = backdrop_strtolower($rule['pages']);
 
     $page_match = backdrop_match_path($path, $pages);
     if ($path != $_GET['q']) {
@@ -101,7 +94,7 @@ function page_theme_custom_theme() {
     }
 
     if ($page_match) {
-      return $page_theme['theme'];
+      return $rule['theme'];
     }
   }
 }
@@ -112,9 +105,9 @@ function page_theme_custom_theme() {
  */
 function page_theme_config_info() {
 
-  $prefixes['page_theme.'] = array(
-    'name_key' => 'theme',
-    'label_callback' => 'page_theme_get_page_themes_name',
+  $prefixes['page_theme.rule'] = array(
+    'name_key' => 'rule',
+    'label_key' => 'name',
     'group' => t('Page Theme'),
   );
 
@@ -123,31 +116,32 @@ function page_theme_config_info() {
 
 
 /**
- * Helper functions.
+ * Helper functions: Themes
  */
-
-function page_theme_get_themes($theme = NULL) {
+function page_theme_get_themes() {
 
   static $themes = array();
 
   if (!$themes) {
 
-    $result = db_query('SELECT name, info FROM {system} WHERE type = :type', array(':type' => 'theme'));
-    foreach ($result as $theme_data) {
-      $theme_data->info = unserialize($theme_data->info);
+    $result = db_query('SELECT name, status, info FROM {system} WHERE type = :type', array(':type' => 'theme'));
+    foreach ($result as $theme) {
+      $theme->info = unserialize($theme->info);
 
-      if (empty($theme_data->info['hidden']) || !$theme_data->info['hidden']) {
-        $themes[$theme_data->name] = $theme_data->info['name'];
+      if (empty($theme->info['hidden']) || !$theme->info['hidden']) {
+        $themes[$theme->name] = array(
+          'theme' => $theme->name,
+          'name' => $theme->info['name'],
+          'status' => $theme->status,
+        );
       }
     }
-
-    asort($themes);
   }
 
-  return !is_null($theme) ? (isset($themes[$theme]) ? $themes[$theme] : $theme) : $themes;
+  return $themes;
 }
 
-function page_theme_get_theme_options() {
+function page_theme_get_themes_options() {
 
   static $options = array();
 
@@ -155,76 +149,65 @@ function page_theme_get_theme_options() {
 
     $themes = page_theme_get_themes();
 
-    $page_themes = page_theme_get_page_themes_all();
-    foreach ($page_themes as $theme => $page_theme) {
-      unset($themes[$theme]);
+    $options['0'] = '- '. t('Select theme') .' -';
+    foreach ($themes as $theme) {
+      $options[$theme['theme']] = page_theme_get_theme_name($theme['theme']);
     }
 
-    $options['0'] = '- '. t('Select theme') .' -';
-    foreach ($themes as $theme => $theme_name) {
-      $options[$theme] = page_theme_get_theme_status($theme) ? $theme_name : t('!theme (disabled)', array('!theme' => $theme_name));
-    }
+    asort($options, SORT_NATURAL | SORT_FLAG_CASE);
   }
 
   return $options;
 }
 
-function page_theme_get_theme_name($theme) {
+function page_theme_get_theme_name($theme, $expand = FALSE) {
 
   $themes = page_theme_get_themes();
 
-  return isset($themes[$theme]) ? (page_theme_get_theme_status($theme) ? $themes[$theme] : t('!theme (disabled)', array('!theme' => $themes[$theme]))) : t('!theme (not available)', array('!theme' => $theme));
-}
-
-function page_theme_get_theme_status($theme) {
-
-  $system = db_query('SELECT status FROM {system} WHERE name = :name', array(':name' => $theme))
-    ->fetchObject();
-
-  return $system->status;
-}
-
-
-function page_theme_get_page_themes_all() {
-
-  $weight = array();
-  $theme = array();
-  $page_themes = array();
-
-  $config_names = config_get_names_with_prefix('page_theme.');
-  foreach ($config_names as $config_name) {
-
-    $page_theme = config_get($config_name);
-
-    $weight[$page_theme['theme']] = $page_theme['weight'];
-    $theme[$page_theme['theme']] = $page_theme['theme'];
-    $page_themes[$page_theme['theme']] = $page_theme;
+  if (isset($themes[$theme])) {
+    $name = $expand && !$themes[$theme]['status'] ? check_plain($themes[$theme]['name']) . '<br><small>' . t('(Disabled)') . '</small>' : $themes[$theme]['name'];
+  }
+  else {
+    $name = $expand ? $theme . '<br><small>' . t('(Not available)') . '</small>' : $theme;
   }
 
-  array_multisort($weight, SORT_ASC, $theme, SORT_ASC, SORT_STRING, $page_themes);
-
-  return $page_themes;
+  return $name;
 }
 
-function page_theme_get_page_themes_enabled() {
 
-  $page_themes_enabled = &backdrop_static(__FUNCTION__);
-  if (isset($page_themes_enabled)) {
-    return $page_themes_enabled;
+/**
+ * Helper functions: Rules
+ */
+function page_theme_get_rules() {
+
+  $weight = $rule = $rules = array();
+
+  foreach (config_get_names_with_prefix('page_theme.rule.') as $name) {
+    $data = config_get($name);
+
+    $weight[$data['rule']] = $data['weight'];
+    $rule[$data['rule']] = $data['rule'];
+    $rules[$data['rule']] = $data;
   }
 
-  $page_themes_enabled = array();
-  $page_themes = page_theme_get_page_themes_all();
-  foreach ($page_themes as $theme) {
-    if (!!$theme['status']) {
-      $page_themes_enabled[$theme['theme']] = $theme;
+  array_multisort($weight, SORT_ASC, $rule, SORT_ASC, SORT_STRING, $rules);
+
+  return $rules;
+}
+
+function page_theme_get_rules_enabled() {
+
+  $rules_enabled = &backdrop_static(__FUNCTION__);
+  if (isset($rules_enabled)) {
+    return $rules_enabled;
+  }
+
+  $rules_enabled = array();
+  foreach (page_theme_get_rules() as $rule) {
+    if (!!$rule['status']) {
+      $rules_enabled[$rule['rule']] = $rule;
     }
   }
 
-  return $page_themes_enabled;
-}
-
-function page_theme_get_page_themes_name($page_theme) {
-
-  return page_theme_get_theme_name($page_theme['theme']);
+  return $rules_enabled;
 }

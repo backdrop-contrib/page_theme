@@ -35,3 +35,25 @@ function page_theme_update_1000() {
   // Delete database table.
   db_drop_table('page_theme');
 }
+
+/**
+ * Update to new config schema.
+ */
+function page_theme_update_1200() {
+
+  $themes = page_theme_get_themes();
+
+  foreach (config_get_names_with_prefix('page_theme.') as $name) {
+
+    $data = config_get($name);
+    $data['rule'] = $data['theme'];
+    $data['name'] = isset($themes[$data['theme']]['name']) ? $themes[$data['theme']]['name'] : $data['theme'];
+
+    config('page_theme.rule.' . $data['rule'])
+      ->setData($data)
+      ->save();
+
+    config($name)
+      ->delete();
+  }
+}
