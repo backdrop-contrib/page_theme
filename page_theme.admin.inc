@@ -59,11 +59,18 @@ function page_theme_admin_overview($form, &$form_state) {
         'class' => array('page-theme-order-weight'),
       ),
     );
-    $row['configure'] = array(
-      '#markup' => l(t('configure'), 'admin/appearance/page-theme/manage/'. strtr($rule['rule'], array('_' => '-')) .'/configure'),
-    );
-    $row['delete'] = array(
-      '#markup' => l(t('delete'), 'admin/appearance/page-theme/manage/'. strtr($rule['rule'], array('_' => '-')) .'/delete'),
+    $row['operations'] = array(
+      '#type' => 'operations',
+      '#links' => array(
+        'configure' => array(
+          'title' => t('Configure'),
+          'href' => 'admin/appearance/page-theme/manage/'. strtr($rule['rule'], array('_' => '-')) .'/configure',
+        ),
+        'delete' => array(
+          'title' => t('Delete'),
+          'href' => 'admin/appearance/page-theme/manage/'. strtr($rule['rule'], array('_' => '-')) .'/delete',
+        ),
+      ),
     );
 
     $rules[$rule['rule']] = $row;
@@ -96,8 +103,7 @@ function theme_page_theme_admin_overview($variables) {
     $row[] = backdrop_render($form['rules'][$rule]['roles_display']);
     $row[] = backdrop_render($form['rules'][$rule]['status']);
     $row[] = backdrop_render($form['rules'][$rule]['weight']);
-    $row[] = backdrop_render($form['rules'][$rule]['configure']);
-    $row[] = backdrop_render($form['rules'][$rule]['delete']);
+    $row[] = backdrop_render($form['rules'][$rule]['operations']);
 
     $rows[] = array('data' => $row, 'class' => array('draggable'));
   }
@@ -109,7 +115,7 @@ function theme_page_theme_admin_overview($variables) {
   $header[] = t('Roles');
   $header[] = t('Enabled');
   $header[] = t('Weight');
-  $header[] = array('data' => t('Operations'), 'colspan' => '2');
+  $header[] = t('Operations');
 
   $output = '<p>' . t('If pages are several defined, the first rule in the list will be used.') . '</p>';
   $output .= '<p>' . t('Only themes, which are enabled in the <a href="@themes_section">themes section</a>, will be used otherwise the site default theme.', array('@themes_section' => url('admin/appearance'))) . '</p>';
