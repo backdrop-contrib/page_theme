@@ -76,6 +76,10 @@ function page_theme_admin_overview($form, &$form_state) {
     $rules[$rule['rule']] = $row;
   }
 
+  $form['information'] = array(
+    array('#markup' => '<p>' . t('If pages are several defined, the first rule in the list will be used.') . '</p>'),
+    array('#markup' => '<p>' . t('Only themes, which are enabled in the <a href="@themes_section">themes section</a>, will be used otherwise the site default theme.', array('@themes_section' => url('admin/appearance'))) . '</p>'),
+  );
   $form['rules'] = array('#tree' => TRUE);
   $form['rules'] += $rules;
 
@@ -117,8 +121,7 @@ function theme_page_theme_admin_overview($variables) {
   $header[] = t('Weight');
   $header[] = t('Operations');
 
-  $output = '<p>' . t('If pages are several defined, the first rule in the list will be used.') . '</p>';
-  $output .= '<p>' . t('Only themes, which are enabled in the <a href="@themes_section">themes section</a>, will be used otherwise the site default theme.', array('@themes_section' => url('admin/appearance'))) . '</p>';
+  $output = backdrop_render($form['information']);
   $output .= theme('table', array(
     'header' => $header,
     'rows' => $rows,
