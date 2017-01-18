@@ -20,31 +20,15 @@ function page_theme_admin_overview($form, &$form_state) {
       '#value' => $rule['rule'],
     );
     $row['name'] = array(
-      '#type' => 'value',
-      '#value' => $rule['name'],
-    );
-    $row['name_display'] = array(
       '#markup' => check_plain($rule['name']) . '<br><small>' . t('(Machine name: @rule)', array('@rule' => $rule['rule'])) . '</small>',
     );
     $row['theme'] = array(
-      '#type' => 'value',
-      '#value' => $rule['theme'],
-    );
-    $row['theme_display'] = array(
       '#markup' => page_theme_get_theme_name($rule['theme'], TRUE),
     );
     $row['pages'] = array(
-      '#type' => 'value',
-      '#value' => $rule['pages'],
-    );
-    $row['pages_display'] = array(
       '#markup' => nl2br(check_plain($rule['pages'])),
     );
     $row['roles'] = array(
-      '#type' => 'value',
-      '#value' => $rule['roles'],
-    );
-    $row['roles_display'] = array(
       '#markup' => theme('item_list', array('items' => array_intersect_key(array_map('check_plain', user_roles()), array_flip($rule['roles'])))),
     );
     $row['status'] = array(
@@ -101,10 +85,10 @@ function theme_page_theme_admin_overview($variables) {
   foreach (element_children($form['rules']) as $rule) {
 
     $row = array();
-    $row[] = backdrop_render($form['rules'][$rule]['name_display']);
-    $row[] = backdrop_render($form['rules'][$rule]['theme_display']);
-    $row[] = backdrop_render($form['rules'][$rule]['pages_display']);
-    $row[] = backdrop_render($form['rules'][$rule]['roles_display']);
+    $row[] = backdrop_render($form['rules'][$rule]['name']);
+    $row[] = backdrop_render($form['rules'][$rule]['theme']);
+    $row[] = backdrop_render($form['rules'][$rule]['pages']);
+    $row[] = backdrop_render($form['rules'][$rule]['roles']);
     $row[] = backdrop_render($form['rules'][$rule]['status']);
     $row[] = backdrop_render($form['rules'][$rule]['weight']);
     $row[] = backdrop_render($form['rules'][$rule]['operations']);
@@ -139,16 +123,12 @@ function page_theme_admin_overview_submit($form, &$form_state) {
 
   foreach ($form_state['values']['rules'] as $rule) {
 
-    config('page_theme.rule.' . $rule['rule'])
-      ->setData(array(
-        'rule' => $rule['rule'],
-        'name' => $rule['name'],
-        'theme' => $rule['theme'],
-        'pages' => $rule['pages'],
-        'roles' => $rule['roles'],
-        'status' => $rule['status'],
-        'weight' => $rule['weight'],
-      ))
+    $data = config_get('page_theme.rule.' . $rule['rule']);
+    $data['status'] = $rule['status'];
+    $data['weight'] = $rule['weight'];
+
+    config('page_theme.rule.' . $data['rule'])
+      ->setData($data)
       ->save();
 
     backdrop_static_reset('page_theme_get_rules_enabled');
@@ -337,9 +317,6 @@ function page_theme_admin_edit_validate($form, &$form_state) {
 
 function page_theme_admin_edit_submit($form, &$form_state) {
 
-  config('page_theme.rule.' . $form_state['values']['obsolete'])
-      ->delete();
-
   config('page_theme.rule.' . $form_state['values']['rule'])
     ->setData(array(
       'rule' => $form_state['values']['rule'],
@@ -351,6 +328,12 @@ function page_theme_admin_edit_submit($form, &$form_state) {
       'weight' => $form_state['values']['weight'],
     ))
     ->save();
+
+  if ($form_state['values']['rule'] != $form_state['values']['obsolete']) {
+    // Machine name of the rule changed, so delete the old one.
+    config('page_theme.rule.' . $form_state['values']['obsolete'])
+      ->delete();
+  }
 
   backdrop_static_reset('page_theme_get_rules_enabled');
 
