@@ -29,6 +29,11 @@ function page_theme_menu() {
     'type' => MENU_LOCAL_ACTION,
     'file' => 'page_theme.admin.inc',
   );
+  $items['admin/appearance/page-theme/list'] = array(
+    'title' => 'List rules',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -10,
+  );
   $items['admin/appearance/page-theme/manage/%page_theme_rule'] = array(
     'title' => 'Configure rule',
     'title callback' => 'page_theme_get_rule_name',
@@ -75,7 +80,7 @@ function page_theme_admin_bar_map() {
   $map['admin/appearance/page-theme/manage/%page_theme_rule'] = array(
     'parent' => 'admin/appearance/page-theme',
     'arguments' => array(
-      array('%page_theme_rule' => array_keys(page_theme_get_rules())),
+      array('%page_theme_rule' => array_keys(page_theme_get_rules_list())),
     ),
   );
 
@@ -141,7 +146,7 @@ function page_theme_config_info() {
 
 
 /**
- * Helper functions: Themes
+ * Helper functions for themes.
  */
 function page_theme_get_themes() {
 
@@ -166,21 +171,26 @@ function page_theme_get_themes() {
   return $themes;
 }
 
-function page_theme_get_themes_options() {
+function page_theme_get_themes_list() {
 
-  static $options = array();
+  $themes = array();
 
-  if (!$options) {
+  if (!$themes) {
 
-    $themes = page_theme_get_themes();
-
-    $options['0'] = '- '. t('Select theme') .' -';
-    foreach ($themes as $theme) {
-      $options[$theme['theme']] = page_theme_get_theme_name($theme['theme']);
+    foreach (page_theme_get_themes() as $theme) {
+      $themes[$theme['theme']] = $theme['name'];
     }
 
-    asort($options, SORT_NATURAL | SORT_FLAG_CASE);
+    asort($themes, SORT_NATURAL | SORT_FLAG_CASE);
   }
+
+  return $themes;
+}
+
+function page_theme_get_themes_options() {
+
+  $options['0'] = '- '. t('Select theme') .' -';
+  $options += page_theme_get_themes_list();
 
   return $options;
 }
@@ -201,21 +211,42 @@ function page_theme_get_theme_name($theme, $expand = FALSE) {
 
 
 /**
- * Helper functions: Rules
+ * Helper functions for rules.
  */
 function page_theme_get_rules() {
 
-  $weight = $rule = $rules = array();
+  static $rules = array();
 
-  foreach (config_get_names_with_prefix('page_theme.rule.') as $name) {
-    $data = config_get($name);
+  if (!$rules) {
 
-    $weight[$data['rule']] = $data['weight'];
-    $rule[$data['rule']] = $data['rule'];
-    $rules[$data['rule']] = $data;
+    $weight = $rule = array();
+
+    foreach (config_get_names_with_prefix('page_theme.rule.') as $name) {
+      $data = config_get($name);
+
+      $weight[$data['rule']] = $data['weight'];
+      $rule[$data['rule']] = $data['rule'];
+      $rules[$data['rule']] = $data;
+    }
+
+    array_multisort($weight, SORT_ASC, $rule, SORT_ASC, SORT_STRING, $rules);
   }
 
-  array_multisort($weight, SORT_ASC, $rule, SORT_ASC, SORT_STRING, $rules);
+  return $rules;
+}
+
+function page_theme_get_rules_list() {
+
+  $rules = array();
+
+  if (!$rules) {
+
+    foreach (page_theme_get_rules() as $rule) {
+      $rules[$rule['rule']] = $rule['name'];
+    }
+
+    asort($rules, SORT_NATURAL | SORT_FLAG_CASE);
+  }
 
   return $rules;
 }

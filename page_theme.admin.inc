@@ -77,12 +77,9 @@ function page_theme_admin_overview_submit($form, &$form_state) {
 
   foreach ($form_state['values']['rules'] as $rule) {
 
-    $data = config_get('page_theme.rule.' . $rule['rule']);
-    $data['status'] = $rule['status'];
-    $data['weight'] = $rule['weight'];
-
-    config('page_theme.rule.' . $data['rule'])
-      ->setData($data)
+    config('page_theme.rule.' . $rule['rule'])
+      ->set('status', $rule['status'])
+      ->set('weight', $rule['weight'])
       ->save();
 
     backdrop_static_reset('page_theme_get_rules_enabled');
@@ -198,7 +195,7 @@ function page_theme_admin_edit($form, &$form_state, $rule) {
 
   backdrop_set_title(t('Configure rule %name', array('%name' => $rule['name'])), PASS_THROUGH);
 
-  $form['obsolete'] = array(
+  $form['old_rule'] = array(
       '#type' => 'value',
       '#value' => $rule['rule'],
   );
@@ -286,9 +283,9 @@ function page_theme_admin_edit_submit($form, &$form_state) {
     ))
     ->save();
 
-  if ($form_state['values']['rule'] != $form_state['values']['obsolete']) {
-    // Machine name of the rule changed, so delete the old one.
-    config('page_theme.rule.' . $form_state['values']['obsolete'])
+  // Delete the previous configuration file if any.
+  if ($form_state['values']['rule'] != $form_state['values']['old_rule']) {
+    config('page_theme.rule.' . $form_state['values']['old_rule'])
       ->delete();
   }
 
