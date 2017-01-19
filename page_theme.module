@@ -31,23 +31,23 @@ function page_theme_menu() {
   );
   $items['admin/appearance/page-theme/manage/%page_theme_rule'] = array(
     'title' => 'Configure rule',
+    'title callback' => 'page_theme_get_rule_name',
+    'title arguments' => array(4),
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('page_theme_admin_edit', 4),
     'access arguments' => array('administer themes'),
     'file' => 'page_theme.admin.inc',
   );
   $items['admin/appearance/page-theme/manage/%page_theme_rule/configure'] = array(
-    'title' => 'Configure rule',
+    'title' => 'Configure',
     'type' => MENU_DEFAULT_LOCAL_TASK,
-    'context' => MENU_CONTEXT_INLINE,
   );
   $items['admin/appearance/page-theme/manage/%page_theme_rule/delete'] = array(
-    'title' => 'Delete rule',
+    'title' => 'Delete',
     'page callback' => 'backdrop_get_form',
     'page arguments' => array('page_theme_admin_delete', 4),
     'access arguments' => array('administer themes'),
-    'type' => MENU_LOCAL_TASK,
-    'context' => MENU_CONTEXT_NONE,
+    'type' => MENU_VISIBLE_IN_BREADCRUMB,
     'file' => 'page_theme.admin.inc',
   );
 
@@ -60,6 +60,26 @@ function page_theme_rule_load($rule) {
   $rules = page_theme_get_rules();
 
   return isset($rules[$rule]) ? $rules[$rule] : FALSE;
+}
+
+
+/**
+ * Implements hook_admin_bar_map().
+ */
+function page_theme_admin_bar_map() {
+
+  if (!user_access('administer themes')) {
+    return;
+  }
+
+  $map['admin/appearance/page-theme/manage/%page_theme_rule'] = array(
+    'parent' => 'admin/appearance/page-theme',
+    'arguments' => array(
+      array('%page_theme_rule' => array_keys(page_theme_get_rules())),
+    ),
+  );
+
+  return $map;
 }
 
 
@@ -215,4 +235,9 @@ function page_theme_get_rules_enabled() {
   }
 
   return $rules_enabled;
+}
+
+function page_theme_get_rule_name($rule) {
+
+  return check_plain($rule['name']);
 }

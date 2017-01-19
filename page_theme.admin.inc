@@ -184,6 +184,7 @@ function page_theme_admin_add_submit($form, &$form_state) {
     ->save();
 
   backdrop_static_reset('page_theme_get_rules_enabled');
+  menu_rebuild();
 
   backdrop_set_message(t('The rule has been added.'));
   $form_state['redirect'] = 'admin/appearance/page-theme';
@@ -194,6 +195,8 @@ function page_theme_admin_add_submit($form, &$form_state) {
  * Menu callback; edits a rule.
  */
 function page_theme_admin_edit($form, &$form_state, $rule) {
+
+  backdrop_set_title(t('Configure rule %name', array('%name' => $rule['name'])), PASS_THROUGH);
 
   $form['obsolete'] = array(
       '#type' => 'value',
@@ -319,6 +322,7 @@ function page_theme_admin_delete_submit($form, &$form_state) {
       ->delete();
 
     backdrop_static_reset('page_theme_get_rules_enabled');
+    menu_rebuild();
 
     backdrop_set_message(t('The rule has been deleted.'));
     $form_state['redirect'] = 'admin/appearance/page-theme';
