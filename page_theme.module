@@ -70,7 +70,7 @@ function page_theme_theme() {
 
   $themes['page_theme_admin_overview'] = array(
     'render element' => 'form',
-    'file' => 'page_theme.admin.inc',
+    'file' => 'page_theme.theme.inc',
   );
 
   return $themes;
