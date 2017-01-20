@@ -74,7 +74,7 @@ function page_theme_update_1200() {
 /**
  * Set module's weight to 50.
  */
-function page_theme_update_1201() {
+function page_theme_update_1202() {
 
   db_update('system')
     ->fields(array('weight' => 50))

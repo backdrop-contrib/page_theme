@@ -61,10 +61,9 @@ function page_theme_menu() {
 
 function page_theme_rule_load($rule) {
 
-  $rule = strtr($rule, array('-' => '_'));
-  $rules = page_theme_get_rules();
+  $name = 'page_theme.rule.' . strtr($rule, array('-' => '_'));
 
-  return isset($rules[$rule]) ? $rules[$rule] : FALSE;
+  return config_get($name);
 }
 
 
@@ -138,7 +137,7 @@ function page_theme_config_info() {
   $prefixes['page_theme.rule'] = array(
     'name_key' => 'rule',
     'label_key' => 'name',
-    'group' => t('Page Theme'),
+    'group' => t('Page theme rules'),
   );
 
   return $prefixes;
@@ -173,7 +172,7 @@ function page_theme_get_themes() {
 
 function page_theme_get_themes_list() {
 
-  $themes = array();
+  static $themes = array();
 
   if (!$themes) {
 
@@ -237,7 +236,7 @@ function page_theme_get_rules() {
 
 function page_theme_get_rules_list() {
 
-  $rules = array();
+  static $rules = array();
 
   if (!$rules) {
 
@@ -271,4 +270,17 @@ function page_theme_get_rules_enabled() {
 function page_theme_get_rule_name($rule) {
 
   return check_plain($rule['name']);
+}
+
+function page_theme_get_rule_roles($rule) {
+
+  static $roles= array();
+
+  if (!$roles) {
+    $roles = user_roles();
+  }
+
+  $rule_roles = array_flip($rule['roles']);
+
+  return array_intersect_key($roles, $rule_roles);
 }

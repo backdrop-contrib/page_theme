@@ -15,10 +15,6 @@ function page_theme_admin_overview($form, &$form_state) {
 
   foreach (page_theme_get_rules() as $rule) {
 
-    $row['rule'] = array(
-      '#type' => 'value',
-      '#value' => $rule['rule'],
-    );
     $row['name'] = array(
       '#markup' => check_plain($rule['name']) . '<br><small>' . t('(Machine name: @rule)', array('@rule' => $rule['rule'])) . '</small>',
     );
@@ -29,7 +25,7 @@ function page_theme_admin_overview($form, &$form_state) {
       '#markup' => nl2br(check_plain($rule['pages'])),
     );
     $row['roles'] = array(
-      '#markup' => theme('item_list', array('items' => array_intersect_key(array_map('check_plain', user_roles()), array_flip($rule['roles'])))),
+      '#markup' => theme('item_list', array('items' => array_map('check_plain', page_theme_get_rule_roles($rule)))),
     );
     $row['status'] = array(
       '#type' => 'checkbox',
@@ -65,25 +61,22 @@ function page_theme_admin_overview($form, &$form_state) {
   $form['rules'] += $rules;
 
   $form['actions'] = array('#type' => 'actions');
-  $form['actions']['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Save configuration'),
-  );
+  $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Save configuration'));
 
   return $form;
 }
 
 function page_theme_admin_overview_submit($form, &$form_state) {
 
-  foreach ($form_state['values']['rules'] as $rule) {
+  foreach ($form_state['values']['rules'] as $rule => $data) {
 
-    config('page_theme.rule.' . $rule['rule'])
-      ->set('status', $rule['status'])
-      ->set('weight', $rule['weight'])
+    config('page_theme.rule.' . $rule)
+      ->set('status', $data['status'])
+      ->set('weight', $data['weight'])
       ->save();
-
-    backdrop_static_reset('page_theme_get_rules_enabled');
   }
+
+  backdrop_static_reset('page_theme_get_rules_enabled');
 
   backdrop_set_message(t('The configuration has been saved.'));
 }
@@ -97,8 +90,8 @@ function page_theme_admin_add($form, &$form_state) {
   backdrop_set_title(t('Add rule'));
 
   $form['name'] = array(
-    '#title' => t('Name'),
     '#type' => 'textfield',
+    '#title' => t('Name'),
     '#description' => t('The human-readable name of this rule. It is recommended that this name begin with a capital letter and contain only letters, numbers, and spaces. This name must be unique.'),
     '#default_value' => '',
     '#required' => TRUE,
@@ -151,10 +144,7 @@ function page_theme_admin_add($form, &$form_state) {
   );
 
   $form['actions'] = array('#type' => 'actions');
-  $form['actions']['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Save configuration'),
-  );
+  $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Add rule'));
 
   return $form;
 }
@@ -200,8 +190,8 @@ function page_theme_admin_edit($form, &$form_state, $rule) {
       '#value' => $rule['rule'],
   );
   $form['name'] = array(
-    '#type' => 'textfield',
     '#title' => t('Name'),
+    '#type' => 'textfield',
     '#description' => t('The human-readable name of this rule. It is recommended that this name begin with a capital letter and contain only letters, numbers, and spaces. This name must be unique.'),
     '#default_value' => $rule['name'],
     '#required' => TRUE,
@@ -254,10 +244,7 @@ function page_theme_admin_edit($form, &$form_state, $rule) {
   );
 
   $form['actions'] = array('#type' => 'actions');
-  $form['actions']['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Save configuration'),
-  );
+  $form['actions']['submit'] = array('#type' => 'submit', '#value' => t('Update rule'));
 
   return $form;
 }
@@ -290,6 +277,7 @@ function page_theme_admin_edit_submit($form, &$form_state) {
   }
 
   backdrop_static_reset('page_theme_get_rules_enabled');
+  menu_rebuild();
 
   backdrop_set_message(t('The rule has been updated.'));
   $form_state['redirect'] = 'admin/appearance/page-theme';
