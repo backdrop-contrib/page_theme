@@ -124,7 +124,7 @@ function page_theme_admin_add($form, &$form_state) {
   $form['roles'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Roles'),
-    '#description' => t('Show this theme only for the selected role(s). If you select no roles, the block will be visible to all users.'),
+    '#description' => t('Show this theme only for the selected role(s). If you select no roles, the theme will be visible to all users.'),
     '#default_value' => array(),
     '#options' => array_map('check_plain', user_roles()),
   );
@@ -224,7 +224,7 @@ function page_theme_admin_edit($form, &$form_state, $rule) {
   $form['roles'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Roles'),
-    '#description' => t('Show this theme only for the selected role(s). If you select no roles, the block will be visible to all users.'),
+    '#description' => t('Show this theme only for the selected role(s). If you select no roles, the theme will be visible to all users.'),
     '#default_value' => $rule['roles'],
     '#options' => array_map('check_plain', user_roles()),
   );
