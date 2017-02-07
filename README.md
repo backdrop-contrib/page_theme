@@ -10,16 +10,23 @@ Installation
 - Install this module using the official Backdrop CMS instructions at
   (https://backdropcms.org/guide/modules)
 
-- Visit the configuration page under Administration > Appearance > Page theme
-  (admin/appearance/page-theme)
+- Enable this module under Administration > Functionality > Appearance.
+
+Usage
+-----
+
+Add a page theme rule under Administration > Appearance > Page theme and assign
+a theme to a single page or list of pages. The visibility of a theme can be
+controlled by restricting it to roles.
 
 Troubleshooting
 ---------------
 
 If another theme is displayed as expected, enable the Custom Theme Analyzer
-block from the Custom Theme Analyzer module. The block displays a list of
+block from the Custom Theme Analyzer module. This block displays a list of
 modules which override the system default theme sorted by module's call-up.
-(https://backdropcms.org/project/analyzers)
+The Custom Theme Analyzer module is part of the Analyzers collection
+(https://backdropcms.org/project/analyzers).
 
 License
 -------
